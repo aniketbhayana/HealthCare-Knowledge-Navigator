@@ -1,8 +1,8 @@
-# HealthCare-Knowledge-Navigator
+# HealthCare Knowledge Navigator
 
 # Healthcare Knowledge Navigator
 
-A Retrieval-Augmented Generation (RAG) application that enables evidence-based querying of healthcare guidelines.
+A Retrieval Augmented Generation (RAG) application that enables evidence based querying of healthcare guidelines.
 
 ## Features
 
