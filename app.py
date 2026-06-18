@@ -4,7 +4,6 @@ from src.rag_engine import ask_question
 
 st.set_page_config(
     page_title="Healthcare Knowledge Navigator",
-    page_icon="🏥",
     layout="wide"
 )
 
