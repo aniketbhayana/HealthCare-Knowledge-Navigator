@@ -25,9 +25,21 @@ chroma_client = chromadb.PersistentClient(
     path="./chroma_db"
 )
 
-collection = chroma_client.get_collection(
-    "healthcare_knowledge"
-)
+try:
+
+    collection = chroma_client.get_collection(
+        "healthcare_knowledge"
+    )
+
+except:
+
+    from src.build_chroma import build_database
+
+    build_database()
+
+    collection = chroma_client.get_collection(
+        "healthcare_knowledge"
+    )
 
 # -----------------------
 # RAG Function

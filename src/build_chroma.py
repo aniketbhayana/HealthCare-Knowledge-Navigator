@@ -5,10 +5,6 @@ import chromadb
 
 from sentence_transformers import SentenceTransformer
 
-# ======================
-# Configuration
-# ======================
-
 DATA_DIR = "data"
 
 CHUNK_SIZE = 800
@@ -17,23 +13,16 @@ CHUNK_OVERLAP = 150
 COLLECTION_NAME = "healthcare_knowledge"
 
 
-# ======================
-# Text Cleaning
-# ======================
-
 def clean_text(text):
 
-    # Fix words split across lines
     text = re.sub(
         r'(\w)-\n(\w)',
         r'\1\2',
         text
     )
 
-    # Replace line breaks
     text = text.replace("\n", " ")
 
-    # Remove extra spaces
     text = re.sub(
         r"\s+",
         " ",
@@ -42,10 +31,6 @@ def clean_text(text):
 
     return text.strip()
 
-
-# ======================
-# Chunking
-# ======================
 
 def create_chunks(document):
 
@@ -79,137 +64,124 @@ def create_chunks(document):
     return chunks
 
 
-# ======================
-# Find PDFs
-# ======================
+def build_database():
 
-pdf_files = [
-    file
-    for file in os.listdir(DATA_DIR)
-    if file.endswith(".pdf")
-]
+    pdf_files = [
+        file
+        for file in os.listdir(DATA_DIR)
+        if file.endswith(".pdf")
+    ]
 
-print(f"Found {len(pdf_files)} PDFs")
+    print(f"Found {len(pdf_files)} PDFs")
 
-for pdf in pdf_files:
-    print(f" - {pdf}")
+    print("\nLoading embedding model...")
 
+    model = SentenceTransformer(
+        "all-MiniLM-L6-v2"
+    )
 
-# ======================
-# Embedding Model
-# ======================
+    print("Connecting to Chroma...")
 
-print("\nLoading embedding model...")
+    client = chromadb.PersistentClient(
+        path="./chroma_db"
+    )
 
-model = SentenceTransformer(
-    "all-MiniLM-L6-v2"
-)
+    try:
 
+        client.delete_collection(
+            name=COLLECTION_NAME
+        )
 
-# ======================
-# Chroma Setup
-# ======================
+        print(
+            "Old collection deleted"
+        )
 
-print("Connecting to Chroma...")
+    except:
 
-client = chromadb.PersistentClient(
-    path="./chroma_db"
-)
+        print(
+            "No existing collection found"
+        )
 
-try:
-    client.delete_collection(
+    collection = client.create_collection(
         name=COLLECTION_NAME
     )
-    print("Old collection deleted")
-except:
-    print("No existing collection found")
-
-collection = client.create_collection(
-    name=COLLECTION_NAME
-)
-
-print(
-    f"Created collection: {COLLECTION_NAME}"
-)
-
-
-# ======================
-# Process PDFs
-# ======================
-
-total_chunks = 0
-
-for pdf_file in pdf_files:
 
     print(
-        f"\nProcessing {pdf_file}"
+        f"Created collection: {COLLECTION_NAME}"
     )
 
-    document = fitz.open(
-        os.path.join(
-            DATA_DIR,
-            pdf_file
-        )
-    )
+    total_chunks = 0
 
-    chunks = create_chunks(
-        document
-    )
+    for pdf_file in pdf_files:
 
-    print(
-        f"Created {len(chunks)} chunks"
-    )
-
-    total_chunks += len(chunks)
-
-    for chunk_id, chunk in enumerate(chunks):
-
-        embedding = model.encode(
-            chunk["text"]
-        ).tolist()
-
-        chunk_unique_id = (
-            f"{pdf_file}_{chunk_id}"
+        print(
+            f"\nProcessing {pdf_file}"
         )
 
-        collection.add(
-            ids=[chunk_unique_id],
-            documents=[
+        document = fitz.open(
+            os.path.join(
+                DATA_DIR,
+                pdf_file
+            )
+        )
+
+        chunks = create_chunks(
+            document
+        )
+
+        print(
+            f"Created {len(chunks)} chunks"
+        )
+
+        total_chunks += len(chunks)
+
+        for chunk_id, chunk in enumerate(chunks):
+
+            embedding = model.encode(
                 chunk["text"]
-            ],
-            metadatas=[{
-                "page": chunk["page"],
-                "source": pdf_file
-            }],
-            embeddings=[
-                embedding
-            ]
-        )
+            ).tolist()
 
-        if chunk_id % 100 == 0:
-
-            print(
-                f"Processed "
-                f"{chunk_id}/{len(chunks)}"
+            chunk_unique_id = (
+                f"{pdf_file}_{chunk_id}"
             )
 
+            collection.add(
+                ids=[chunk_unique_id],
+                documents=[
+                    chunk["text"]
+                ],
+                metadatas=[{
+                    "page": chunk["page"],
+                    "source": pdf_file
+                }],
+                embeddings=[
+                    embedding
+                ]
+            )
 
-# ======================
-# Done
-# ======================
+            if chunk_id % 100 == 0:
 
-print("\n====================")
-print("INGESTION COMPLETE")
-print("====================")
+                print(
+                    f"Processed {chunk_id}/{len(chunks)}"
+                )
 
-print(
-    f"Total PDFs: {len(pdf_files)}"
-)
+    print("\n====================")
+    print("INGESTION COMPLETE")
+    print("====================")
 
-print(
-    f"Total Chunks: {total_chunks}"
-)
+    print(
+        f"Total PDFs: {len(pdf_files)}"
+    )
 
-print(
-    f"Collection: {COLLECTION_NAME}"
-)
+    print(
+        f"Total Chunks: {total_chunks}"
+    )
+
+    print(
+        f"Collection: {COLLECTION_NAME}"
+    )
+
+
+if __name__ == "__main__":
+
+    build_database()
