@@ -4,6 +4,7 @@ from src.rag_engine import ask_question
 
 st.set_page_config(
     page_title="Healthcare Knowledge Navigator",
+    page_icon="🏥",
     layout="wide"
 )
 
@@ -18,7 +19,7 @@ with st.sidebar:
     st.markdown("""
     **Healthcare Knowledge Navigator**
 
-    Evidence-based medical
+    Evidence based medical
     question answering using:
 
     - ChromaDB
@@ -37,6 +38,9 @@ with st.sidebar:
     • WHO 
                 
     • NICE Diabetes Guidelines 2026
+
+    • KDIGO 2026 Guidelines         
+    
     """)
 
 # --------------------
