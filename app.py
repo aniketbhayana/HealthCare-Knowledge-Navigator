@@ -3,105 +3,100 @@ import streamlit as st
 from src.rag_engine import ask_question
 
 st.set_page_config(
-    page_title="Healthcare Knowledge Navigator",
+    page_title="Clinical Guideline Navigator",
     page_icon="🏥",
     layout="wide"
 )
 
-# --------------------
-# Sidebar
-# --------------------
-
-with st.sidebar:
-
-    st.title("🏥 About")
-
-    st.markdown("""
-    **Healthcare Knowledge Navigator**
-
-    Evidence based medical
-    question answering using:
-
-    - ChromaDB
-    - Sentence Transformers
-    - Gemini 2.5 Flash
-    - Clinical Guidelines
-    """)
-
-    st.divider()
-
-    st.markdown("""
-    **Current Knowledge Base**
-
-    • ADA Standards of Care
-
-    • WHO 
-                
-    • NICE Diabetes Guidelines 2026
-
-    • KDIGO 2026 Guidelines         
-    
-    """)
-
-# --------------------
-# Header
-# --------------------
-
-st.title(
-    "🏥 Healthcare Knowledge Navigator"
-)
-
+st.title("🏥 Clinical Guideline Navigator")
 st.caption(
-    "Ask evidence-based questions from clinical guidelines"
+    "Evidence-based answers from ADA, WHO and NICE guidelines"
 )
 
-st.divider()
+# =====================
+# Chat History
+# =====================
 
-# --------------------
-# Input
-# --------------------
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-question = st.text_area(
-    "Clinical Question",
-    placeholder="What eating patterns are recommended for diabetes management?",
-    height=120
-)
+# =====================
+# Display Chat History
+# =====================
 
-# --------------------
-# Search
-# --------------------
+for message in st.session_state.messages:
 
-col1, col2, col3 = st.columns([1,1,1])
-
-with col2:
-
-    ask = st.button(
-        "Ask Question",
-        use_container_width=True
-    )
-
-# --------------------
-# Results
-# --------------------
-
-if ask and question:
-
-    with st.spinner(
-        "Searching clinical guidelines..."
+    with st.chat_message(
+        message["role"]
     ):
 
-        answer, sources = ask_question(
-            question
+        st.markdown(
+            message["content"]
         )
 
-    st.divider()
+        if (
+            message["role"] == "assistant"
+            and "sources" in message
+        ):
 
-    st.subheader("💡 Answer")
+            with st.expander(
+                "Sources"
+            ):
 
-    st.markdown("### 💡 Answer")
-    st.markdown(answer)
+                for source in message["sources"]:
 
-    with st.expander("📚 Sources"):
+                    st.write(
+                        f"• {source}"
+                    )
 
-        for source in sources:
-            st.markdown(f"- {source}")
+# =====================
+# Chat Input
+# =====================
+
+prompt = st.chat_input(
+    "Ask a healthcare question..."
+)
+
+if prompt:
+
+    # Show user message
+    st.session_state.messages.append({
+        "role": "user",
+        "content": prompt
+    })
+
+    with st.chat_message("user"):
+
+        st.markdown(prompt)
+
+    # Generate answer
+    with st.chat_message(
+        "assistant"
+    ):
+
+        with st.spinner(
+            "Searching guidelines..."
+        ):
+
+            answer, sources = ask_question(
+                prompt
+            )
+
+        st.markdown(answer)
+
+        with st.expander(
+            "Sources"
+        ):
+
+            for source in sources:
+
+                st.write(
+                    f"• {source}"
+                )
+
+    # Save assistant response
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": answer,
+        "sources": sources
+    })

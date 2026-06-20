@@ -53,7 +53,7 @@ def ask_question(question):
 
     results = collection.query(
         query_embeddings=[query_embedding],
-        n_results=3
+        n_results=5
     )
 
     context = ""
@@ -72,6 +72,26 @@ def ask_question(question):
         sources.append(
             f"{source} - Page {page}"
         )
+    history = ""
+
+    try:
+
+        import streamlit as st
+
+        recent_messages = (
+            st.session_state.messages[-8:]
+        )
+
+        for msg in recent_messages:
+
+            history += (
+                f"{msg['role']}: "
+                f"{msg['content']}\n"
+            )
+
+    except:
+
+        pass
 
     prompt = f"""
     You are a healthcare knowledge navigator.
@@ -87,6 +107,10 @@ def ask_question(question):
     3.Provide structured answers using bullet points when appropriate.Summarize key recommendations clearly.Do not quote large passages verbatim.
         Always present actionable recommendations first.
     4. Never invent recommendations or treatments.
+
+    
+    Conversation History:
+    {history}
 
     Context:
     {context}
