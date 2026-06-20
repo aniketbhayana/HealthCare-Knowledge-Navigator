@@ -1,6 +1,11 @@
+import os
 import streamlit as st
 
 from src.rag_engine import ask_question
+
+# =====================
+# Page Config
+# =====================
 
 st.set_page_config(
     page_title="Clinical Guideline Navigator",
@@ -8,9 +13,109 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🏥 Clinical Guideline Navigator")
+# =====================
+# Sidebar
+# =====================
+
+with st.sidebar:
+
+    st.title(
+        "🏥 Clinical Guideline Navigator"
+    )
+
+    st.divider()
+
+    st.subheader(
+        "📚 Current Knowledge Sources"
+    )
+
+    try:
+
+        pdf_files = [
+            file
+            for file in os.listdir("data")
+            if file.endswith(".pdf")
+        ]
+
+        for pdf in pdf_files:
+
+            st.write(
+                f"📄 {pdf.replace('.pdf', '')}"
+            )
+
+    except:
+
+        st.write(
+            "No guideline documents found."
+        )
+
+    st.divider()
+
+    st.subheader("ℹ️ About")
+
+    st.info(
+        """
+        Clinical Guideline Navigator is a
+        Retrieval Augmented Generation (RAG)
+        system that answers healthcare
+        questions using trusted clinical
+        guidelines.
+        """
+    )
+
+    st.markdown(
+        """
+        **Powered By**
+
+        • Gemini 2.5 Flash
+
+        • ChromaDB
+
+        • Sentence Transformers
+
+        • Streamlit
+        """
+    )
+
+    st.divider()
+
+    st.subheader("💡 Tips")
+
+    st.markdown(
+        """
+        • Ask follow-up questions
+
+        • Sources are shown below answers
+
+        • Answers are grounded in the
+          loaded guideline documents
+
+        • Use specific medical questions
+          for best results
+        """
+    )
+
+    st.divider()
+
+    if st.button(
+        "🗑️ Clear Chat",
+        use_container_width=True
+    ):
+
+        st.session_state.messages = []
+
+        st.rerun()
+
+# =====================
+# Main Header
+# =====================
+
+st.title(
+    "🏥 Clinical Guideline Navigator"
+)
+
 st.caption(
-    "Evidence-based answers from ADA, WHO and NICE guidelines"
+    "Evidence based answers from trusted clinical guidelines"
 )
 
 # =====================
@@ -18,10 +123,11 @@ st.caption(
 # =====================
 
 if "messages" not in st.session_state:
+
     st.session_state.messages = []
 
 # =====================
-# Display Chat History
+# Display Messages
 # =====================
 
 for message in st.session_state.messages:
@@ -40,7 +146,7 @@ for message in st.session_state.messages:
         ):
 
             with st.expander(
-                "Sources"
+                "📚 Sources"
             ):
 
                 for source in message["sources"]:
@@ -59,7 +165,8 @@ prompt = st.chat_input(
 
 if prompt:
 
-    # Show user message
+    # User Message
+
     st.session_state.messages.append({
         "role": "user",
         "content": prompt
@@ -69,7 +176,8 @@ if prompt:
 
         st.markdown(prompt)
 
-    # Generate answer
+    # Assistant Message
+
     with st.chat_message(
         "assistant"
     ):
@@ -85,7 +193,7 @@ if prompt:
         st.markdown(answer)
 
         with st.expander(
-            "Sources"
+            "📚 Sources"
         ):
 
             for source in sources:
@@ -94,7 +202,6 @@ if prompt:
                     f"• {source}"
                 )
 
-    # Save assistant response
     st.session_state.messages.append({
         "role": "assistant",
         "content": answer,
