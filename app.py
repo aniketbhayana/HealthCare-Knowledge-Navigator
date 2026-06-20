@@ -53,15 +53,17 @@ with st.sidebar:
 
     st.subheader("ℹ️ About")
 
-    st.info(
-        """
-        Clinical Guideline Navigator is a
-        Retrieval Augmented Generation (RAG)
-        system that answers healthcare
-        questions using trusted clinical
-        guidelines.
-        """
-    )
+    st.markdown("""
+    Clinical Guideline Navigator is an AI-powered
+    healthcare assistant that retrieves information
+    directly from trusted clinical guidelines and
+    uses Retrieval-Augmented Generation (RAG) to
+    provide evidence-based answers.
+
+    The system does not rely on general internet
+    knowledge and cites the guideline sources used
+    for each response.
+    """)
 
     st.markdown(
         """
